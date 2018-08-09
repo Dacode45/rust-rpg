@@ -1,0 +1,7 @@
+[package]
+name = "rpg"
+version = "0.1.0"
+authors = ["David Ayeke"]
+
+[dependencies]
+ggez = "0.4"
