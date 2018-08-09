@@ -1,0 +1,38 @@
+{ "height":7,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 5, 7, 1, 1, 1, 1, 1, 1, 5, 7, 1, 2, 3, 1, 1, 1, 5, 7, 1, 5, 6, 1, 1, 1, 5, 7, 1, 5, 6, 1, 1, 2, 11, 7, 1, 5, 6, 1, 1, 5, 6, 7, 1, 8, 9, 1, 1, 5, 6, 7, 1, 1, 1],
+         "height":7,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }],
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.1.6",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "columns":16,
+         "firstgid":1,
+         "image":"..\/..\/..\/..\/..\/Downloads\/examples_explore\/tilemap-12-solution\/atlas.png",
+         "imageheight":512,
+         "imagewidth":512,
+         "margin":0,
+         "name":"atlas",
+         "spacing":0,
+         "tilecount":256,
+         "tileheight":32,
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":1,
+ "width":8
+}

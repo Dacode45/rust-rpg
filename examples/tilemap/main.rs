@@ -14,6 +14,15 @@ use std::path;
 
 struct MainState;
 
+fn draw_at(ctx: &mut Context, image: &graphics::Image, x: f32, y: f32) {
+     let drawparams = graphics::DrawParam {
+            dest: graphics::Point2::new(x, y),
+            rotation: 0.0,
+            offset: graphics::Point2::new(0.5, 0.5),
+            ..Default::default()
+        };
+        graphics::draw_ex(ctx, image, drawparams);
+}
 
 impl EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
@@ -22,14 +31,29 @@ impl EventHandler for MainState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx);
 
+        let gHW = ctx.conf.window_mode.width / 2;
+        let gHH = ctx.conf.window_mode.height / 2;
+
         let grass_image = graphics::Image::new(ctx, "/grass_tile.png")?;
-        let drawparams = graphics::DrawParam {
-            dest: graphics::Point2::new(0.5, 0.5),
-            rotation: 0.0,
-            offset: graphics::Point2::new(0.5, 0.5),
-            ..Default::default()
-        };
-        graphics::draw_ex(ctx, &grass_image, drawparams);
+        let iHW = grass_image.width() / 2;
+        let iHH = grass_image.height() / 2;
+
+        let gTilesPerRow = (2 * gHW) / (2 * iHW) + 1; 
+        let gTilesPerCol = (2 * gHH) / (2 * iHH) + 1;
+
+        for i in 0..gTilesPerRow {
+            for j in 0..gTilesPerCol {
+                draw_at(ctx, &grass_image, (i * 2 * iHW) as f32, (j * 2 * iHH) as f32);
+            }
+        }
+
+        // let drawparams = graphics::DrawParam {
+        //     dest: graphics::Point2::new((gHW - iHW) as f32, (gHH - iHH) as f32),
+        //     rotation: 0.0,
+        //     offset: graphics::Point2::new(0.5, 0.5),
+        //     ..Default::default()
+        // };
+        // graphics::draw_ex(ctx, &grass_image, drawparams);
 
         // Then we flip the screen...
         graphics::present(ctx);
