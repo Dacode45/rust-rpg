@@ -1,18 +1,16 @@
 extern crate ggez;
+extern crate tiled;
 
-use ggez::audio;
-use ggez::conf;
 use ggez::event::{self, EventHandler, Keycode, Mod};
+use ggez::conf;
 use ggez::graphics;
-use ggez::graphics::{Point2, Vector2};
-use ggez::nalgebra as na;
 use ggez::timer;
+use ggez::filesystem;
 use ggez::{Context, ContextBuilder, GameResult};
-
+use ggez::graphics::{Point2, Rect};
 use std::env;
 use std::path;
 
-struct MainState;
 
 fn draw_at(ctx: &mut Context, image: &graphics::Image, x: f32, y: f32) {
      let drawparams = graphics::DrawParam {
@@ -21,41 +19,224 @@ fn draw_at(ctx: &mut Context, image: &graphics::Image, x: f32, y: f32) {
             offset: graphics::Point2::new(0.5, 0.5),
             ..Default::default()
         };
-        graphics::draw_ex(ctx, image, drawparams);
+        graphics::draw_ex(ctx, image, drawparams).unwrap();
+}
+#[derive(Debug)]
+struct Map<'a> {
+    // pixel location of left of map
+    map_x: f32,
+    // pixel location of top of map
+    map_y: f32,
+
+    map_cam_x: f32,
+    map_cam_y: f32,
+
+    map_def: &'a tiled::Map,
+    image: &'a graphics::Image,
+    
+    // layer index to use
+    layer_index: usize,
+    // tileset to use
+    tile_set: usize,
+    // width of map in tiles
+    map_width: f32,
+    // height of map in tiles
+    map_height: f32,
+
+    tile_width: f32,
+    tile_height: f32,
+
+    map_pixel_width: f32,
+    map_pixel_height: f32,
+
+    uvs: Vec<Rect>,    
 }
 
-impl EventHandler for MainState {
+impl<'a> Map<'a> {
+    pub fn new(image: &'a graphics::Image, map_def: &'a tiled::Map, layer_index: usize, tile_set: usize) -> Self {
+        Map{
+            map_x: 0.0,
+            map_y: 0.0,
+
+            map_cam_x: 0.0,
+            map_cam_y: 0.0,
+
+            map_def,
+            image,
+
+            layer_index,
+            tile_set,
+
+            map_width: map_def.width as f32,
+            map_height: map_def.height as f32,
+
+            tile_width: map_def.tilesets[tile_set].tile_width as f32,
+            tile_height: map_def.tilesets[tile_set].tile_height as f32,
+
+            map_pixel_width: (map_def.tilesets[tile_set].tile_width * map_def.width) as f32,
+            map_pixel_height: (map_def.tilesets[tile_set].tile_height * map_def.height) as f32,
+
+            uvs: generate_uvs(map_def, tile_set),
+        }
+    }
+
+    pub fn point_to_tile(&self, x: f32, y:f32) -> (usize, usize) {
+        let x = clamp(x, self.map_x, self.map_x + self.map_pixel_width - 1.0);
+        let y = clamp(y, self.map_y, self.map_y + self.map_pixel_height - 1.0);
+
+        let tile_x = ((x - self.map_x) / self.tile_width).floor();
+        let tile_y = ((y - self.map_y) / self.tile_height).floor();
+
+        (tile_x as usize, tile_y as usize)
+    }
+}
+
+impl<'a> graphics::Drawable for Map<'a> {
+    fn draw_ex(&self, ctx: &mut Context, param: graphics::DrawParam) -> GameResult<()> {
+        let (w, h) = graphics::get_size(ctx);
+
+        // ignore src until i figure out what to do with it 
+        let start_x = self.map_cam_x - self.tile_width; // + param.src.left() * self.map_pixel_width;
+        let start_y = self.map_cam_y - self.tile_height; // + param.src.top() * self.map_pixel_height;
+        let end_x = self.tile_width + start_x + w as f32; // + param.src.right() * self.map_pixel_width;
+        let end_y = self.tile_height + start_y + h as f32; // + param.src.bottom() * self.map_pixel_height;
+
+
+    let (tile_left, tile_top) = self.point_to_tile(start_x, start_y);
+    let (tile_right, tile_bottom) = self.point_to_tile(end_x, end_y);
+
+    for j in tile_top..(tile_bottom) {
+        for i in tile_left..(tile_right) {
+            let x: f32 = self.map_x + self.tile_width * i as f32;
+            let y: f32 = self.map_y + self.tile_height * j as f32;
+            let tile_index = self.map_def.layers[self.layer_index].tiles[j as usize][i as usize];
+            let uv = self.uvs[tile_index as usize - 1];
+
+            let mut params = graphics::DrawParam::default();
+            params.src = uv;
+            params.dest = Point2::new(param.dest.x + x, param.dest.y + y);
+            if let Err(err) = graphics::draw_ex(ctx, self.image, params) {
+                return Err(err)
+            }
+        }
+    }
+        Ok(())
+    }
+    fn set_blend_mode(&mut self, _: Option<graphics::BlendMode>) {}
+    fn get_blend_mode(&self) -> Option<graphics::BlendMode> {
+        None
+    }
+}
+
+
+#[inline]
+pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
+    debug_assert!(min <= max, "min must be less than or equal to max");
+    if input < min {
+        min
+    } else if input > max {
+        max
+    } else {
+        input
+    }
+}
+
+fn generate_uvs(map: &tiled::Map, tileset_id: usize) -> Vec<Rect> {
+    let tileset = &map.tilesets[tileset_id];
+        let i_width = tileset.images[0].width as f32;
+        let i_height = tileset.images[0].height as f32;
+        let t_width = tileset.tile_width as f32;
+        let t_height = tileset.tile_height as f32;
+        
+        let width = t_width / i_width;
+        let height = t_height / i_height;
+        let cols = i_width / t_width;
+        let rows = i_height / t_height;
+
+        let mut ux: f32 = 0.0;
+        let mut uy: f32 = 0.0;
+
+        let mut uvs = Vec::new();
+
+        for _ in 0..(rows as u32) {
+            for _ in 0..(cols as u32) {
+                uvs.push(
+                    Rect::new(ux, uy, width, height)
+                );
+                ux += width;
+            }
+            ux = 0.0;
+            uy += height;
+        }
+        return uvs
+    
+}
+
+fn load_tile_map(ctx: &mut Context, tilemap_src: &str) -> GameResult<tiled::Map> {
+    let tilemap_file = ctx.filesystem.open(tilemap_src)?;    
+    match tiled::parse(tilemap_file) {
+                Ok(map) => Ok(map),
+                Err(_) => Err(ggez::GameError::from(String::from("tiled error")))
+            }
+
+}
+
+#[derive(Debug)]
+struct InputState {
+    xaxis: f32,
+    yaxis: f32,
+    fire: bool,
+}
+
+impl Default for InputState {
+    fn default() -> Self {
+        InputState {
+            xaxis: 0.0,
+            yaxis: 0.0,
+            fire: false,
+        }
+    }
+}
+
+struct MainState<'a> {
+    image: &'a graphics::Image,
+    tilemap: &'a tiled::Map,
+    map: Map<'a>,
+
+    input: InputState,
+
+}
+
+impl<'a> MainState<'a> {
+    pub fn new(ctx: &mut Context, image: &'a graphics::Image, tilemap: &'a tiled::Map) -> GameResult<MainState<'a>> {
+        let map = Map::new(image, tilemap, 0, 0);
+        Ok(MainState{
+            image: &image,
+            tilemap: &tilemap,
+            map,
+
+            input: InputState::default(),
+        })
+
+    }
+}
+
+impl<'a> EventHandler for MainState<'a> {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        const DESIRED_FPS: u32 = 60;
+        const SPEED: f32 = 100.0;
+
+        while timer::check_update_time(ctx, DESIRED_FPS) {
+            let seconds = 1.0 / (DESIRED_FPS as f32);
+            self.map.map_cam_x += self.input.xaxis * SPEED * seconds;
+            self.map.map_cam_y += self.input.yaxis * SPEED * seconds;
+        }
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx);
-
-        let gHW = ctx.conf.window_mode.width / 2;
-        let gHH = ctx.conf.window_mode.height / 2;
-
-        let grass_image = graphics::Image::new(ctx, "/grass_tile.png")?;
-        let iHW = grass_image.width() / 2;
-        let iHH = grass_image.height() / 2;
-
-        let gTilesPerRow = (2 * gHW) / (2 * iHW) + 1; 
-        let gTilesPerCol = (2 * gHH) / (2 * iHH) + 1;
-
-        for i in 0..gTilesPerRow {
-            for j in 0..gTilesPerCol {
-                draw_at(ctx, &grass_image, (i * 2 * iHW) as f32, (j * 2 * iHH) as f32);
-            }
-        }
-
-        // let drawparams = graphics::DrawParam {
-        //     dest: graphics::Point2::new((gHW - iHW) as f32, (gHH - iHH) as f32),
-        //     rotation: 0.0,
-        //     offset: graphics::Point2::new(0.5, 0.5),
-        //     ..Default::default()
-        // };
-        // graphics::draw_ex(ctx, &grass_image, drawparams);
-
-        // Then we flip the screen...
+        graphics::draw(ctx, &self.map, Point2::new(-self.map.map_cam_x, -self.map.map_cam_y), 0.0)?;
+        // println!("x: {:?}, y: {:?}\n", self.map.map_cam_x, self.map.map_cam_y);
         graphics::present(ctx);
 
         // And yield the timeslice
@@ -64,8 +245,53 @@ impl EventHandler for MainState {
         // This ideally prevents the game from using 100% CPU all the time
         // even if vsync is off.
         // The actual behavior can be a little platform-specific.
-        timer::yield_now();
+        // timer::yield_now();
         Ok(())
+    }
+
+    // Handle key events.  These just map keyboard events
+    // and alter our input state appropriately.
+    fn key_down_event(&mut self, ctx: &mut Context, keycode: Keycode, _keymod: Mod, _repeat: bool) {
+        match keycode {
+            Keycode::Up => {
+                self.input.yaxis = -1.0;
+            }
+            Keycode::Down => {
+                self.input.yaxis = 1.0;
+            }
+            Keycode::Left => {
+                self.input.xaxis = -1.0;
+            }
+            Keycode::Right => {
+                self.input.xaxis = 1.0;
+            }
+            Keycode::Space => {
+                self.input.fire = true;
+            }
+            Keycode::Escape => ctx.quit().unwrap(),
+            _ => (), // Do nothing
+        }
+    }
+
+    fn key_up_event(&mut self, _ctx: &mut Context, keycode: Keycode, _keymod: Mod, _repeat: bool) {
+        match keycode {
+            Keycode::Up => {
+                self.input.yaxis = 0.0;
+            }
+            Keycode::Down => {
+                self.input.yaxis = 0.0;
+            }
+            Keycode::Left => {
+                self.input.xaxis = 0.0;
+            }
+            Keycode::Right => {
+                self.input.xaxis = 0.0;
+            }
+            Keycode::Space => {
+                self.input.fire = false;
+            }
+            _ => (), // Do nothing
+        }
     }
 
 }
@@ -93,8 +319,10 @@ fn main() {
 
     ctx.print_resource_stats();
     graphics::set_background_color(ctx, (0, 0, 0, 255).into());
-
-    let mut game = MainState{};
+    
+    let image = graphics::Image::new(ctx, "/cave16x16.png").unwrap();
+    let tilemap = load_tile_map(ctx, "/larger_map.tmx").unwrap();
+    let mut game = MainState::new(ctx, &image, &tilemap).unwrap();
     let result = event::run(ctx, &mut game);
     if let Err(e) = result {
         println!("Error encountered running game: {}", e);
