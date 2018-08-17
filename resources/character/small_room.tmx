@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="16" tileheight="16">
+ <tileset firstgid="1" name="rpg_indoor" tilewidth="16" tileheight="16">
+  <image source="rpg_indoor.png" width="176" height="192"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="12" height="12">
+  <data encoding="base64" compression="zlib">
+   eJy9zzsOglAQheGLIgWgYiFWFixARPANglKYULIB9r8MfpIpbkFxDYnFl5xJTiYzllJqhjlsyfq8gAMXHnwsscJasj4H2GCLEB0aQ98f++1I30IiPIP9O+xFZNA/aPtvE+//R3+4N8ZRbj4hRYYzLrhKHv6544EnchR4oUSFNz6Sa/RZ5CBY
+  </data>
+ </layer>
+</map>
