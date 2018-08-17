@@ -4,9 +4,20 @@ use ggez::{
     GameError,
     graphics::{
         Rect,
+        Point2,
     }
 };
 use tiled;
+
+/// Math functions
+
+pub fn add_points(args: &[&Point2]) -> Point2 {
+    args.iter().fold(Point2::new(0.0, 0.0), |mut sum, val| {
+        sum.x += val.x;
+        sum.y += val.y;
+        sum
+    })
+}
 
 #[inline]
 pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
