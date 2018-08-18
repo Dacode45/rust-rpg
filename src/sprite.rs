@@ -50,6 +50,10 @@ impl Sprite {
         }
     }
 
+    pub fn frame(&self) -> usize {
+        self.frame
+    }
+
     pub fn set_frame(&mut self, frame: usize) {
         self.frame = frame;
         self.sprite_batch.clear();

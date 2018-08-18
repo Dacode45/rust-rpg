@@ -68,7 +68,7 @@ impl EventHandler for MainState {
         // This ideally prevents the game from using 100% CPU all the time
         // even if vsync is off.
         // The actual behavior can be a little platform-specific.
-        // timer::yield_now();
+        timer::yield_now();
         Ok(())
     }
 
