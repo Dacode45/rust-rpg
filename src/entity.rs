@@ -1,9 +1,4 @@
-use ggez::{
-    graphics::{
-        self,
-        Point2,
-    },
-};
+use ggez::graphics::{self, Point2};
 
 use map::Map;
 use sprite::{Sprite, SpriteComponent};
@@ -15,19 +10,21 @@ pub struct Entity {
     pub tile_x: usize,
     pub tile_y: usize,
 
+    pub start_frame: usize,
     frame: usize,
 }
 
 impl Entity {
-    pub fn new(dimensions: Point2) -> Self {
-        Entity{
+    pub fn new(dimensions: Point2, start_frame: usize) -> Self {
+        Entity {
             pos: Point2::new(0.0, 0.0),
             dimensions,
 
             tile_x: 0,
             tile_y: 0,
 
-            frame: 0,
+            start_frame,
+            frame: start_frame,
         }
     }
 

@@ -3,13 +3,12 @@ use ggez::graphics::spritebatch::SpriteBatch;
 use ggez::graphics::{Point2, Rect};
 use ggez::{Context, GameResult};
 
+use sprite::{Sprite, SpriteComponent};
 use tiled;
 use util;
-use sprite::{Sprite, SpriteComponent};
 
 #[derive(Debug)]
 pub struct Map {
-
     // pixel location of top left of map
     pub pos: Point2,
     pub camera: Rect,
@@ -20,20 +19,16 @@ pub struct Map {
     pub layer_index: usize,
     // tileset to use
     pub tile_set: usize,
-    
+
     pub dimensions: Point2,
-    
+
     pub tile_dimensions: Point2,
 
     pub pixel_dimensions: Point2,
 }
 
 impl Map {
-    pub fn new(
-        map_def: & tiled::Map,
-        layer_index: usize,
-        tile_set: usize,
-    ) -> Self {
+    pub fn new(map_def: &tiled::Map, layer_index: usize, tile_set: usize) -> Self {
         let layers = map_def.layers.clone();
         let tilesets = map_def.tilesets.clone();
 
@@ -41,14 +36,14 @@ impl Map {
         Map {
             pos: zero.clone(),
             camera: Rect::new(0.0, 0.0, 1.0, 1.0),
-            
+
             layers,
             tilesets,
             layer_index,
             tile_set,
 
             dimensions: Point2::new(map_def.width as f32, map_def.height as f32),
-           
+
             tile_dimensions: Point2::new(
                 map_def.tilesets[tile_set].tile_width as f32,
                 map_def.tilesets[tile_set].tile_height as f32,
@@ -57,7 +52,7 @@ impl Map {
             pixel_dimensions: Point2::new(
                 (map_def.tilesets[tile_set].tile_width * map_def.width) as f32,
                 (map_def.tilesets[tile_set].tile_height * map_def.height) as f32,
-            )
+            ),
         }
     }
 
@@ -93,17 +88,16 @@ impl Map {
 
 impl SpriteComponent for Map {
     fn setup_sprite(&self, sprite: &mut Sprite) {
-        
         let (tile_left, tile_top) = self.point_to_tile(self.camera.left(), self.camera.top());
-        let (tile_right, tile_bottom) = self.point_to_tile(self.camera.right(), self.camera.bottom());
+        let (tile_right, tile_bottom) =
+            self.point_to_tile(self.camera.right(), self.camera.bottom());
 
         sprite.sprite_batch.clear();
         for j in tile_top..=(tile_bottom) {
             for i in tile_left..=(tile_right) {
                 let x: f32 = self.pos.x + self.tile_dimensions.x * i as f32;
                 let y: f32 = self.pos.y + self.tile_dimensions.y * j as f32;
-                let tile_index =
-                    self.layers[self.layer_index].tiles[j as usize][i as usize];
+                let tile_index = self.layers[self.layer_index].tiles[j as usize][i as usize];
                 let uv = sprite.uvs[tile_index as usize - 1];
                 // println!("wh: {} {}", uv.left() * self.map_pixel_width, uv.right() * self.map_pixel_width);
 

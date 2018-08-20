@@ -1,12 +1,5 @@
 use ggez::{
-    self,
-    graphics::{
-        self,
-        Image,
-        Point2,
-        Rect,
-        spritebatch::SpriteBatch,
-    },
+    self, graphics::{self, spritebatch::SpriteBatch, Image, Point2, Rect},
 };
 
 use util;
@@ -25,7 +18,9 @@ impl<'a> graphics::Drawable for SpriteDrawContext<'a> {
         self.sprite.sprite_batch.draw_ex(ctx, param)
     }
     fn set_blend_mode(&mut self, mode: Option<graphics::BlendMode>) {}
-    fn get_blend_mode(&self) -> Option<graphics::BlendMode> { None }
+    fn get_blend_mode(&self) -> Option<graphics::BlendMode> {
+        None
+    }
 }
 
 pub struct Sprite {
@@ -57,20 +52,17 @@ impl Sprite {
     pub fn set_frame(&mut self, frame: usize) {
         self.frame = frame;
         self.sprite_batch.clear();
-        
+
         let mut param = graphics::DrawParam::default();
-    
+
         param.src = self.uvs[frame];
         self.sprite_batch.add(param);
     }
 
     pub fn with_context<'a>(&'a mut self, comp: &'a SpriteComponent) -> SpriteDrawContext<'a> {
         comp.setup_sprite(self);
-        SpriteDrawContext{
-            sprite: self,
-            comp,
-        }
-    }    
+        SpriteDrawContext { sprite: self, comp }
+    }
 }
 
 impl graphics::Drawable for Sprite {
@@ -78,7 +70,9 @@ impl graphics::Drawable for Sprite {
         self.sprite_batch.draw_ex(ctx, param)
     }
     fn set_blend_mode(&mut self, mode: Option<graphics::BlendMode>) {}
-    fn get_blend_mode(&self) -> Option<graphics::BlendMode> { None }
+    fn get_blend_mode(&self) -> Option<graphics::BlendMode> {
+        None
+    }
 }
 
 pub trait SpriteComponent {

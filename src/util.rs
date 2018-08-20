@@ -1,11 +1,5 @@
 use ggez::{
-    Context,
-    GameResult,
-    GameError,
-    graphics::{
-        Rect,
-        Point2,
-    }
+    graphics::{Point2, Rect}, Context, GameError, GameResult,
 };
 use tiled;
 

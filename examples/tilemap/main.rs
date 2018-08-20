@@ -11,10 +11,10 @@ use ggez::{Context, ContextBuilder, GameResult};
 use std::env;
 use std::path;
 
-use rpg::map::{Map, uvs_from_tiled};
 use rpg::input::InputState;
-use rpg::util::load_tile_map;
+use rpg::map::{uvs_from_tiled, Map};
 use rpg::sprite::Sprite;
+use rpg::util::load_tile_map;
 
 struct MainState {
     map: Map,
@@ -42,14 +42,10 @@ impl EventHandler for MainState {
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
             let (x, y) = (
-
-            self.map.camera.x + self.input.xaxis * SPEED * seconds,
-            self.map.camera.y + self.input.yaxis * SPEED * seconds
+                self.map.camera.x + self.input.xaxis * SPEED * seconds,
+                self.map.camera.y + self.input.yaxis * SPEED * seconds,
             );
-            self.map.camera.move_to(
-                Point2::new(x, y)
-
-            )
+            self.map.camera.move_to(Point2::new(x, y))
         }
         Ok(())
     }
@@ -114,7 +110,7 @@ fn main() {
     let tilemap = load_tile_map(ctx, "/larger_map.tmx").unwrap();
     let mut sprite = Sprite::new(image, 0.0, 0.0);
     sprite.uvs = uvs_from_tiled(&tilemap, 0);
-    
+
     let mut game = MainState::new(sprite, &tilemap).unwrap();
     let (w, h) = graphics::get_size(ctx);
     game.map.camera.w = w as f32;

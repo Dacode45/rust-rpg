@@ -1,106 +1,93 @@
-use ggez::event::{Keycode};
+use ggez::{
+    self, event::{Keycode, Mod}, graphics::Point2, Context,
+};
 
-#[derive(Debug,Default)]
+#[derive(Debug)]
 pub struct InputState {
+    pub just_pressed: Option<Keycode>,
+    pub just_pressed_axis: Option<Point2>,
 
-    pub just_pressed_xaxis: Option<f32>,
-    pub holding_xaxis: Option<f32>, 
-    pub xaxis: f32,
-
-
-    pub just_pressed_yaxis: Option<f32>,
-    pub holding_yaxis: Option<f32>,
-    pub yaxis: f32,
+    pub axis: Point2,
     pub fire: bool,
 }
 
-impl InputState {
-    pub fn key_down(&mut self, keycode: Keycode) {
+impl Default for InputState {
+    fn default() -> InputState {
+        InputState {
+            just_pressed: None,
+            just_pressed_axis: None,
+
+            axis: Point2::new(0.0, 0.0),
+            fire: false,
+        }
+    }
+}
+
+impl ggez::event::EventHandler for InputState {
+    fn update(&mut self, _: &mut Context) -> ggez::GameResult<()> {
+        self.just_pressed = match self.just_pressed {
+            Some(_) => None,
+            None => None,
+        };
+        self.just_pressed_axis = match self.just_pressed_axis {
+            Some(axis) => None,
+            None => None,
+        };
+        Ok(())
+    }
+    fn key_down_event(&mut self, _: &mut Context, keycode: Keycode, _keymod: Mod, _repeat: bool) {
+        if _repeat {
+            return;
+        }
+        let current = self.axis;
         match keycode {
             Keycode::Up => {
-                self.yaxis = -1.0;
+                self.axis.y = -1.0;
             }
             Keycode::Down => {
-                self.yaxis = 1.0;
+                self.axis.y = 1.0;
             }
             Keycode::Left => {
-                self.xaxis = -1.0;
+                self.axis.x = -1.0;
             }
             Keycode::Right => {
-                self.xaxis = 1.0;
+                self.axis.x = 1.0;
             }
             Keycode::Space => {
                 self.fire = true;
             }
             _ => (),
         }
-        self.advance();
-    }
-
-    // advance a frame clear just pressed
-    pub fn advance(&mut self) {
-        // xasis
-        match (self.just_pressed_xaxis, self.holding_xaxis) {
-            (None, None) if self.xaxis != 0.0 => {
-                self.just_pressed_xaxis = Some(self.xaxis);
-            },
-            (Some(_), None) => {
-                self.just_pressed_xaxis = None;
-                self.holding_xaxis = Some(self.xaxis);
-            },
-            _ => ()
-        }
-        // yaxis
-         match (self.just_pressed_yaxis, self.holding_yaxis) {
-            (None, None) if self.yaxis != 0.0 => {
-                self.just_pressed_yaxis = Some(self.yaxis);
-            },
-            (Some(_), None) => {
-                self.just_pressed_yaxis = None;
-                self.holding_yaxis = Some(self.yaxis);
-            },
-            _ => ()
+        if current != self.axis {
+            self.just_pressed_axis = Some(self.axis);
         }
     }
 
-    pub fn key_up(&mut self, keycode: Keycode) {
+    fn key_up_event(&mut self, _: &mut Context, keycode: Keycode, _keymod: Mod, _repeat: bool) {
+        if _repeat {
+            return;
+        }
         match keycode {
             Keycode::Up => {
-                self.yaxis = 0.0;
+                self.axis.y = 0.0;
             }
             Keycode::Down => {
-                self.yaxis = 0.0;
+                self.axis.y = 0.0;
             }
             Keycode::Left => {
-                self.xaxis = 0.0;
+                self.axis.x = 0.0;
             }
             Keycode::Right => {
-                self.xaxis = 0.0;
+                self.axis.x = 0.0;
             }
             Keycode::Space => {
                 self.fire = false;
             }
             _ => (), // Do nothing
         }
-        // xasis
-        match (self.just_pressed_xaxis, self.holding_xaxis) {
-            (_, Some(_)) => {
-                self.just_pressed_xaxis = None;
-                self.holding_xaxis = None;
-            },
-            (Some(_), _) => {
-                self.just_pressed_xaxis = None;
-                self.holding_xaxis = None;
-            },
-            _ => ()
-        }
-        // yaxis
-        match (self.just_pressed_yaxis, self.holding_yaxis) {
-            (_, Some(_)) => {
-                self.just_pressed_yaxis = None;
-                self.holding_yaxis = None;
-            },
-            _ => ()
-        }
+    }
+
+    fn draw(&mut self, ctx: &mut Context) -> ggez::GameResult<()> {
+        Ok(())
     }
 }
