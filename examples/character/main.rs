@@ -20,6 +20,7 @@ use rpg::sprite::Sprite;
 use rpg::state;
 use rpg::tween;
 use rpg::util::{self, load_tile_map};
+use rpg::anim;
 
 const DESIRED_FPS: u32 = 60;
 
@@ -35,6 +36,12 @@ struct WaitState;
 
 impl<'a> state::State<SharedState> for WaitState {
     fn on_start(&mut self, _data: state::StateData<SharedState>) {
+        let sd = _data.data;
+        let sf = sd.player.start_frame;
+        sd.player.set_frame(sf);
+    }
+
+    fn on_resume(&mut self, _data: state::StateData<SharedState>) {
         let sd = _data.data;
         let sf = sd.player.start_frame;
         sd.player.set_frame(sf);
@@ -57,6 +64,7 @@ impl<'a> state::State<SharedState> for WaitState {
 struct MoveState {
     dir: Point2,
     tween: tween::Tween,
+    animation: anim::Animation,
 
     start: Point2,
     should_move: bool,
@@ -64,9 +72,21 @@ struct MoveState {
 
 impl MoveState {
     pub fn new(dir: Point2) -> Self {
+    
+        let animation = if dir.y == -1.0 {
+            anim::Animation::new(vec![0, 1, 2, 3], false, 0.0)
+        } else if dir.x == 1.0 {
+            anim::Animation::new(vec![4, 5, 6, 7], false, 0.0)
+        } else if dir.y == 1.0 {
+            anim::Animation::new(vec![8, 9, 10, 11], false, 0.0)
+        } else {
+            anim::Animation::new(vec![12, 13, 14, 15], false, 0.0)
+        };
+
         MoveState {
             dir,
             tween: tween::Tween::new(0.0, 1.0, 0.2),
+            animation,
 
             start: Point2::new(0.0, 0.0),
             should_move: false,
@@ -80,15 +100,19 @@ impl<'a> state::State<SharedState> for MoveState {
         if !self.should_move || self.tween.is_finished() {
             return state::Trans::Pop;
         }
+        let dt = 1.0 / (DESIRED_FPS as f32);
         self.tween
-            .update(1.0 / (DESIRED_FPS as f32), &tween::ease_in_quad);
+            .update(dt, &tween::ease_in_quad);
         let value = self.tween.value();
         let next = Point2::new(
             self.start.x + (value * self.dir.x) * sd.map.tile_dimensions.x,
             self.start.y + (value * self.dir.y) * sd.map.tile_dimensions.y,
         );
         sd.player.set_position(next);
-        println!("value: {}", value);
+
+        self.animation.update(dt);
+        sd.player.set_frame(self.animation.frame());
+
         return state::Trans::None;
     }
     fn on_start(&mut self, _data: state::StateData<SharedState>) {

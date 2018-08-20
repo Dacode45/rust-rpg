@@ -13,3 +13,4 @@ pub mod sprite;
 pub mod state;
 pub mod tween;
 pub mod util;
+pub mod anim;
