@@ -3,47 +3,59 @@ use ggez::graphics::{self, Point2};
 use map::Map;
 use sprite::{Sprite, SpriteComponent};
 
+#[derive(Debug, Clone)]
 pub struct Entity {
-    pub pos: Point2,
-    pub dimensions: Point2,
+    pub(crate) id: String,
 
-    pub tile_x: usize,
-    pub tile_y: usize,
+    pos: Point2,
+    pub(crate) dimensions: Point2,
 
-    pub start_frame: usize,
+    pub(crate) tile_x: usize,
+    pub(crate) tile_y: usize,
+    pub(crate) layer: usize,
+
     frame: usize,
 }
 
 impl Entity {
-    pub fn new(dimensions: Point2, start_frame: usize) -> Self {
+    pub fn new(id: String, dimensions: Point2) -> Self {
+        let zero = Point2::new(0.0, 0.0);
         Entity {
-            pos: Point2::new(0.0, 0.0),
+            id,
+
+            pos: zero.clone(),
             dimensions,
 
             tile_x: 0,
             tile_y: 0,
+            layer: 0,
 
-            start_frame,
-            frame: start_frame,
+            frame: 0,
         }
+    }
+
+    pub fn pos(&self) -> graphics::Point2 {
+        self.pos
+    }
+    
+    pub fn layer(&self) -> usize {
+        self.layer
+    }
+
+    pub fn tile_x(&self) -> usize {
+        self.tile_x
+    }
+
+    pub fn tile_y(&self) -> usize {
+        self.tile_y
     }
 
     pub fn set_frame(&mut self, frame: usize) {
         self.frame = frame;
     }
 
-    pub fn set_position(&mut self, pos: Point2) {
+    pub fn set_pos(&mut self, pos: Point2) {
         self.pos = pos;
-    }
-
-    pub fn teleport(&mut self, tile_x: usize, tile_y: usize, map: &Map) {
-        let pos = map.get_tile_foot(tile_x, tile_y);
-        let x = pos.x - self.dimensions.x / 2.0;
-        let y = pos.y - self.dimensions.y;
-
-        self.set_position(Point2::new(x, y));
-        self.tile_x = tile_x;
-        self.tile_y = tile_y;
     }
 }
 

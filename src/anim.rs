@@ -11,18 +11,14 @@ pub struct Animation {
 
 impl Animation {
     pub fn new(frames: Vec<usize>, should_loop: bool, spf: f32) -> Self {
-        let spf = if spf <= 0.0 {
-            0.12
-        } else {
-            spf
-        };
-        Animation{
+        let spf = if spf <= 0.0 { 0.12 } else { spf };
+        Animation {
             frames,
             should_loop,
             spf,
 
             index: 0,
-            time: 0.0,  
+            time: 0.0,
         }
     }
 
@@ -49,7 +45,7 @@ impl Animation {
     }
 
     pub fn frame(&self) -> usize {
-        return self.frames[self.index]
+        return self.frames[self.index];
     }
 
     pub fn is_finished(&self) -> bool {

@@ -13,6 +13,7 @@ use ggez::{Context, ContextBuilder, GameResult};
 use std::env;
 use std::path;
 
+use rpg::anim;
 use rpg::entity::Entity;
 use rpg::input::InputState;
 use rpg::map::{uvs_from_tiled, Map};
@@ -20,7 +21,6 @@ use rpg::sprite::Sprite;
 use rpg::state;
 use rpg::tween;
 use rpg::util::{self, load_tile_map};
-use rpg::anim;
 
 const DESIRED_FPS: u32 = 60;
 
@@ -72,7 +72,6 @@ struct MoveState {
 
 impl MoveState {
     pub fn new(dir: Point2) -> Self {
-    
         let animation = if dir.y == -1.0 {
             anim::Animation::new(vec![0, 1, 2, 3], false, 0.0)
         } else if dir.x == 1.0 {
@@ -101,8 +100,7 @@ impl<'a> state::State<SharedState> for MoveState {
             return state::Trans::Pop;
         }
         let dt = 1.0 / (DESIRED_FPS as f32);
-        self.tween
-            .update(dt, &tween::ease_in_quad);
+        self.tween.update(dt, &tween::ease_in_quad);
         let value = self.tween.value();
         let next = Point2::new(
             self.start.x + (value * self.dir.x) * sd.map.tile_dimensions.x,
@@ -121,15 +119,22 @@ impl<'a> state::State<SharedState> for MoveState {
             sd.player.tile_x as f32 + self.dir.x,
             sd.player.tile_y as f32 + self.dir.y,
         );
-        if next.x >= 0.0
-            && next.x < sd.map.dimensions.x
-            && next.y >= 0.0
-            && next.y < sd.map.dimensions.y
+        if !sd.map
+            .is_blocked(sd.player.layer, next.x as usize, next.y as usize)
         {
             sd.player.tile_x = next.x as usize;
             sd.player.tile_y = next.y as usize;
             self.should_move = true;
         }
+        // if next.x >= 0.0
+        //     && next.x < sd.map.dimensions.x
+        //     && next.y >= 0.0
+        //     && next.y < sd.map.dimensions.y
+        // {
+        //     sd.player.tile_x = next.x as usize;
+        //     sd.player.tile_y = next.y as usize;
+        //     self.should_move = true;
+        // }
         self.start = sd.player.pos;
     }
     fn on_stop(&mut self, _data: state::StateData<SharedState>) {
@@ -157,7 +162,7 @@ impl<'a> MainState<'a> {
     ) -> GameResult<MainState<'a>> {
         let camera = Rect::new(0.0, 0.0, map.pixel_dimensions.x, map.pixel_dimensions.y);
         map.camera = camera;
-        player.teleport(10, 2, &map);
+        player.teleport(10, 4, &map);
 
         Ok(MainState {
             shared_state: SharedState {
@@ -208,17 +213,21 @@ impl<'a> EventHandler for MainState<'a> {
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx);
-        {
-            let s = self.shared_state
-                .map_sprite
-                .with_context(&self.shared_state.map);
-            graphics::draw(ctx, &s, Point2::new(0.0, 0.0), 0.0);
-        }
-        {
-            let s = self.shared_state
-                .player_sprite
-                .with_context(&self.shared_state.player);
-            graphics::draw(ctx, &s, Point2::new(0.0, 0.0), 0.0);
+        for i in 0..self.shared_state.map.layer_count() {
+            self.shared_state.map.layer_index = i;
+            {
+                let s = self.shared_state
+                    .map_sprite
+                    .with_context(&self.shared_state.map);
+                graphics::draw(ctx, &s, Point2::new(0.0, 0.0), 0.0);
+            }
+            if i == self.shared_state.player.layer {
+                println!("Rendered player");
+                let s = self.shared_state
+                    .player_sprite
+                    .with_context(&self.shared_state.player);
+                graphics::draw(ctx, &s, Point2::new(0.0, 0.0), 0.0);
+            }
         }
         graphics::present(ctx);
 
@@ -276,7 +285,7 @@ fn main() {
 
     let mut p_image = graphics::Image::new(ctx, "/character/walk_cycle.png").unwrap();
     let p_sprite = Sprite::new(p_image, 16.0, 24.0);
-    let mut player = Entity::new(Point2::new(16.0, 24.0), 9);
+    let mut player = Entity::new(Point2::new(16.0, 24.0), 0, 9);
 
     let mut game = MainState::new(sprite, p_sprite, map, player).unwrap();
     let result = event::run(ctx, &mut game);

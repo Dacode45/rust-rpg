@@ -1,11 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="12" height="12" tilewidth="16" tileheight="16">
+<map version="1.0" orientation="orthogonal" width="14" height="14" tilewidth="16" tileheight="16">
  <tileset firstgid="1" name="rpg_indoor" tilewidth="16" tileheight="16">
   <image source="rpg_indoor.png" width="176" height="192"/>
  </tileset>
- <layer name="Tile Layer 1" width="12" height="12">
+ <tileset firstgid="133" name="collision_graphic" tilewidth="16" tileheight="16">
+  <image source="collision_graphic.png" width="32" height="32"/>
+ </tileset>
+ <layer name="tilelayer" width="14" height="14">
   <data encoding="base64" compression="zlib">
-   eJy9zzsOglAQheGLIgWgYiFWFixARPANglKYULIB9r8MfpIpbkFxDYnFl5xJTiYzllJqhjlsyfq8gAMXHnwsscJasj4H2GCLEB0aQ98f++1I30IiPIP9O+xFZNA/aPtvE+//R3+4N8ZRbj4hRYYzLrhKHv6544EnchR4oUSFNz6Sa/RZ5CBY
+   eJy9zzEOgkAQQNFVgUIEoUAqCg5gQqcoIFLB/S/kJxmTKSh2JTjJS2aKn80a8/vssMcBnuz69hHgiFB1J0SIcZZd3wlSZLiobsRkadygm/9bidChy1GI0qG7qvduf/ifS2fbLnW2vnNHjQeeaNCiwws93rIPZt18ADuwILI=
+  </data>
+ </layer>
+ <layer name="decoration" width="14" height="14">
+  <data encoding="base64" compression="zlib">
+   eJxjYKAMyBHBxgY0CbCLyXRPHQ5xLyD2JcO8UCCOoLO+ZDrqywbiPDL0DVcAAAj1BgE=
+  </data>
+ </layer>
+ <layer name="collision" width="14" height="14" opacity="0.49">
+  <data encoding="base64" compression="zlib">
+   eJxrZWBgaB2kmAELnxBoRWMTqw/dDGz6sLmPWH3Y2LSyjxAYavpolVawAQD9+Ssg
+  </data>
+ </layer>
+ <layer name="tilelayer" width="14" height="14" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjYBg6QJwEtYqj+gadPl0gNiYSm5NgBzUBAP9dBCM=
+  </data>
+ </layer>
+ <layer name="decoration" width="14" height="14" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo4B+QJ5EcRjQIlGcXAAARRgAkw==
+  </data>
+ </layer>
+ <layer name="collision" width="14" height="14" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUwAAAAxAAAQ==
   </data>
  </layer>
 </map>
